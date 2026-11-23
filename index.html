@@ -1,20 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Particle Network Background</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0b0f19;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Full-screen fixed background canvas */
+    #network-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Sample foreground content */
+    .content {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 16px;
+      padding: 2.5rem;
+      max-width: 520px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="network-bg"></canvas>
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ealger Launcher [v1.0]</title>
     <style>
         body {
-            font-family: 'Orbitron', sans-serif;
-            line-height: 5;
+            line-height: 4;
             margin: 99;
             padding: 4;
-            background-color: #0D9;
-            color: #f4f4f9;
         }
         header {
-            background: #0D98BA;
             color: #FFF;
             padding: 1rem 2rem;
             display: flex;
@@ -37,9 +98,15 @@
     </style>
 </head>
 <body>
-        <h1>Eagler Launcher</h1>
+<div class="screen-center">
+
+</div>
+<h1 style="text-align: center;">Eagler Launcher [v1.0]</h1>
+
+
     <header>
 
+<h2>
         <nav>
             <a href="PixelClient 1.8.8 WASM (1).html">PixelClient 1.8.8</a>
             <a href="PixelClient 1.12.2 WASM.html">PixelClient 1.12.2</a>
@@ -54,5 +121,122 @@
         </nav>
     </header>
 
+</body>
+</html>
+
+  <script>
+    const canvas = document.getElementById("network-bg");
+    const ctx = canvas.getContext("2d");
+
+    // --- Easy Customization ---
+    const config = {
+      dotColor: "rgba(56, 189, 248, 0.85)",   // Cyan dots
+      lineColor: "56, 189, 248",              // RGB values for lines
+      particleCount: 80,                      // Number of dots
+      maxDistance: 140,                       // Max line connection distance (px)
+      mouseRadius: 170,                       // Cursor interaction radius (px)
+      speed: 0.6                              // Drift speed
+    };
+
+    let width, height, particles;
+    const mouse = { x: null, y: null };
+
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener("mouseleave", () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * config.speed;
+        this.vy = (Math.random() - 0.5) * config.speed;
+        this.radius = Math.random() * 2 + 1.2;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Bounce softly off screen edges
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = config.dotColor;
+        ctx.fill();
+      }
+    }
+
+    function init() {
+      resize();
+      particles = Array.from({ length: config.particleCount }, () => new Particle());
+    }
+
+    function connectParticles() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < config.maxDistance) {
+            const opacity = (1 - dist / config.maxDistance) * 0.45;
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(${config.lineColor}, ${opacity})`;
+            ctx.lineWidth = 1;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+
+        // Connect dots to mouse cursor
+        if (mouse.x !== null && mouse.y !== null) {
+          const dx = particles[i].x - mouse.x;
+          const dy = particles[i].y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < config.mouseRadius) {
+            const opacity = (1 - dist / config.mouseRadius) * 0.75;
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(${config.lineColor}, ${opacity})`;
+            ctx.lineWidth = 1.2;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach((p) => {
+        p.update();
+        p.draw();
+      });
+      connectParticles();
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener("resize", init);
+    init();
+    animate();
+  </script>
 </body>
 </html>
