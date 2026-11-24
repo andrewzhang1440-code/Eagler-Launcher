@@ -70,11 +70,17 @@
             margin: 25px auto;
             background: rgba(22, 27, 34, 0.85);
             backdrop-filter: blur(6px);
-            padding: 30px;
+            padding: 15px;
             border-radius: 8px;
             border: 1px solid #30363d;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-            min-height: 60vh;
+        }
+        iframe {
+            width: 100%;
+            height: 75vh;
+            border: none;
+            border-radius: 4px;
+            background: #fff;
         }
         /* Fullscreen styles */
         .container.fullscreen {
@@ -85,9 +91,13 @@
             height: 100vh;
             max-width: none;
             margin: 0;
-            padding: 40px;
+            padding: 0;
             border-radius: 0;
             z-index: 9999;
+        }
+        .container.fullscreen iframe {
+            height: 100vh;
+            border-radius: 0;
         }
     </style>
 </head>
@@ -96,19 +106,18 @@
     <canvas id="particle-canvas"></canvas>
 
     <header>
-        <h2>Ealger Launcher [v1.2]</h2>
+        <h2>Eagler Launcher [v1.2]</h2>
         <nav id="nav-bar"></nav>
         <button id="fs-btn" class="nav-btn">⛶ Fullscreen</button>
     </header>
 
-    <!-- Content is injected here dynamically without changing websites or reloading -->
-    <div class="container" id="content-area">
-        <p>Loading content...</p>
+    <div class="container">
+        <iframe id="page-viewer" src=""></iframe>
     </div>
 
     <script>
         // ==========================================
-        // 1. YOUR 9 FILES LIST
+        // YOUR 9 FILES (Update filenames here)
         // ==========================================
         const pages = [
             { label: "PixelClient 1.8.8", file: "PixelClient 1.8.8 WASM (1).html" },
@@ -123,42 +132,22 @@
         ];
 
         const navBar = document.getElementById("nav-bar");
-        const contentArea = document.getElementById("content-area");
+        const viewer = document.getElementById("page-viewer");
 
-        // Function to load file content via fetch
-        async function loadPageContent(filename, btnElement) {
-            try {
-                const response = await fetch(filename);
-                if (!response.ok) throw new Error("File not found");
-                const htmlText = await response.text();
-
-                // Parse the fetched file to extract just its body or content
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, "text/html");
-                
-                // Inject the inner content directly into our container
-                contentArea.innerHTML = doc.body.innerHTML;
-
-                // Update active button styling
-                document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-                if (btnElement) btnElement.classList.add("active");
-            } catch (err) {
-                contentArea.innerHTML = `<h3>Error</h3><p>Could not load ${filename}. Make sure the file exists in your repository folder!</p>`;
-            }
-        }
-
-        // Build navigation buttons automatically
         pages.forEach((page, index) => {
             const btn = document.createElement("button");
             btn.textContent = page.label;
             btn.className = "nav-btn";
 
             if (index === 0) {
-                loadPageContent(page.file, btn); // Load first file by default
+                btn.classList.add("active");
+                viewer.src = page.file;
             }
 
             btn.addEventListener("click", () => {
-                loadPageContent(page.file, btn);
+                viewer.src = page.file;
+                document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
             });
 
             navBar.appendChild(btn);
@@ -180,7 +169,7 @@
         });
 
         // ==========================================
-        // 2. PARTICLE NETWORK ENGINE
+        // PARTICLE NETWORK ENGINE
         // ==========================================
         const canvas = document.getElementById("particle-canvas");
         const ctx = canvas.getContext("2d");
